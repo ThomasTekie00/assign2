@@ -11,7 +11,7 @@ CC ?= gcc
 
 # The `DEBUG` variable controls whether we compile for debugging or optimization.
 # If 1, builds to build/debug. Otherwise, build/release.
-DEBUG ?= 1
+DEBUG ?= 0
 
 # Name of the target executable
 EXEC_NAME = indexer

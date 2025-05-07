@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "printing.h"
-#include "defs.h"
-#include "common.h"
-#include "map.h"
+#include "../../include/printing.h"
+#include "../../include/defs.h"
+#include "../../include/common.h"
+#include "../../include/adt/map.h"
 
 
 /* how many buckets each map should start with */

@@ -3,10 +3,10 @@
 #include <string.h>
 #include <limits.h>
 
-#include "common.h"
-#include "printing.h"
-#include "defs.h"
-#include "logger.h"
+#include "../include/common.h"
+#include "../include/printing.h"
+#include "../include/defs.h"
+#include "../include/logger.h"
 
 struct logger {
     FILE *f;

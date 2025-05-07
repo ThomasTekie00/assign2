@@ -13,7 +13,7 @@
 
 #include <stddef.h> // for size_t
 
-#include "defs.h"
+#include "../defs.h"
 
 /**
  * Type of set. `set_t` is an alias for `struct set`

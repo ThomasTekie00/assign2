@@ -10,10 +10,10 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include "printing.h"
-#include "tokenize.h"
-#include "common.h"
-#include "list.h"
+#include "../include/printing.h"
+#include "../include/tokenize.h"
+#include "../include/common.h"
+#include "../include/adt/list.h"
 
 
 /* Helper: append token to list if above the length threshold */

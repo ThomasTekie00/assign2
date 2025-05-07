@@ -11,10 +11,10 @@
 
 #include <sys/stat.h>
 
-#include "printing.h"
-#include "defs.h"
-#include "list.h"
-#include "set.h"
+#include "../include/printing.h"
+#include "../include/defs.h"
+#include "../include/adt/list.h"
+#include "../include/adt/set.h"
 
 
 int find_files(const char *dir_path, list_t *dst, set_t *valid_exts, size_t n_files_max) {

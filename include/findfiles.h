@@ -8,8 +8,8 @@
 
 #include <stddef.h> // for size_t
 
-#include "list.h"
-#include "set.h"
+#include "../include/adt/list.h"
+#include "../include/adt/set.h"
 
 /**
  * @brief Recursively find files from the given directory path

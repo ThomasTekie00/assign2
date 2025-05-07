@@ -18,8 +18,8 @@
 #include <sys/stat.h>
 #include <limits.h>
 
-#include "printing.h"
-#include "common.h"
+#include "../include/printing.h"
+#include "../include/common.h"
 
 /* -- comparison functions -- */
 

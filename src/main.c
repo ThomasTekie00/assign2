@@ -19,15 +19,15 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
-#include "printing.h"
-#include "findfiles.h"
-#include "defs.h"
-#include "common.h"
-#include "tokenize.h"
-#include "list.h"
-#include "index.h"
-#include "set.h"
-#include "logger.h"
+#include "../include/printing.h"
+#include "../include/findfiles.h"
+#include "../include/defs.h"
+#include "../include/common.h"
+#include "../include/tokenize.h"
+#include "../include/adt/list.h"
+#include "../include/adt/index.h"
+#include "../include/adt/set.h"
+#include "../include/logger.h"
 
 
 /* SETTING: limit the maximum number of results printed for queries. 0=unlimited. */

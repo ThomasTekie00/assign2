@@ -15,11 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "printing.h"
-#include "defs.h"
-#include "common.h"
-#include "list.h"
-#include "set.h"
+#include "../../include/printing.h"
+#include "../../include/defs.h"
+#include "../../include/common.h"
+#include "../../include/adt/list.h"
+#include "../../include/adt/set.h"
 
 typedef enum tnode_color {
     RED = 0,

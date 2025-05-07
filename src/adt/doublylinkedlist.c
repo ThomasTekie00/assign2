@@ -10,9 +10,9 @@
 
 #include <stdlib.h>
 
-#include "printing.h"
-#include "defs.h"
-#include "list.h"
+#include "../../include/printing.h"
+#include "../../include/defs.h"
+#include "../../include/adt/list.h"
 
 
 typedef struct lnode lnode_t;
