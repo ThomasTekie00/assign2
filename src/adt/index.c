@@ -3,6 +3,7 @@
  */
 
 /* set log level for prints in this file */
+#include <bits/posix2_lim.h>
 #include <time.h>
 #define LOG_LEVEL LOG_LEVEL_DEBUG
 
@@ -70,33 +71,7 @@ int compare_results_by_score(query_result_t *a, query_result_t *b) {
     return 0;
 }
 
-/**
- * @brief debug / helper to print a list of strings with a description.
- * Can safely be removed, but could be useful for debugging/development.
- *
- * Remove this function from your finished program once you are done
- */
-ATTR_MAYBE_UNUSED
-static void print_list_of_strings(const char *descr, list_t *tokens) {
-    if (LOG_LEVEL <= LOG_LEVEL_INFO) {
-        return;
-    }
-    list_iter_t *tokens_iter = list_createiter(tokens);
-    if (!tokens_iter) {
-        /* this is not a critical function, so just print an error and return. */
-        pr_error("Failed to create iterator\n");
-        return;
-    }
 
-    pr_info("\n%s:", descr);
-    while (list_hasnext(tokens_iter)) {
-        char *token = (char *) list_next(tokens_iter);
-        pr_info("\"%s\", ", token);
-    }
-    pr_info("\n");
-
-    list_destroyiter(tokens_iter);
-}
 
 index_t *index_create() {
     index_t *index = malloc(sizeof(index_t));
@@ -215,72 +190,261 @@ int index_document(index_t *index, char *doc_name, list_t *terms) {
     return 0; // or -x on error
 }
 
-/*  AST & PARSING */
 
-/*Implementasjon av en query parser som representerer AST
- - For å håndtere BNF grammar så brukes det en rekursive descent parser
- - Parse de forskjellige gitte operatorene
-*/
 static node_t *Create_Node(list_t *query_tokens){
     //Allokere minne for den nye noden
     node_t *new_node = malloc(sizeof(node_t));
     if(new_node == NULL){
         return NULL;
     }
+
+    
     
     char *token = list_popfirst(query_tokens);
+    if(token == NULL){
+        free(new_node);
+        return NULL;
+    }
 
-    list_iter_t *token_iter = list_createiter(query_tokens);
-    if(!list_hasnext(token_iter)){
-        list_destroyiter(token_iter);
-        new_node -> type = 99; // Telles som en term
-        new_node -> word = strdup(token);
-        new_node -> left = 0;
-        new_node -> right = 0;
+    if(strcmp(token, "(") == 0){
+        free(token);
+        node_t *leaf = Create_Node(query_tokens);
 
-        return new_node;
+        char *next = list_popfirst(query_tokens);
+        if(next == NULL){
+            free(token);
+            return 0;
+        }
+        
+        if(strcmp(token, ")") == 0){
+            if(leaf){
+                free(leaf);
+            }
+            if(next){
+                free(next);
+            }
+            return NULL;
+        }
+        free(next);
+        return leaf;
+    }
+
+    char *next = list_popfirst(query_tokens);
+    if(next == NULL){
+        return 0;
+        free(token);
+    }
+    if(strcmp(next, ")") == 0){
+        free(token);
         
     }
 
+
+    new_node -> left = NULL;
+    new_node -> right = NULL;   
+    
+
     if(strcmp(token, "&&")== 0 ){
         new_node -> type = 0;
+        new_node -> word = strdup(token);
         new_node -> left = Create_Node(query_tokens);
         new_node -> right = Create_Node(query_tokens);
-        printf("Det går ja: %s", token);
 
         if(new_node -> left == NULL || new_node -> right == NULL){
             if(new_node -> left){
                 free(new_node -> left);
+            }
+            if(new_node -> right){
                 free(new_node -> right);
             }
+            free(new_node -> word);
+            free(new_node);
+            return NULL;
         }
+
+        
+
+        
+        
     }else if (strcmp(token,"||") == 0) {
         new_node -> type = 1;
+        new_node -> word = strdup(token);
         new_node -> left = Create_Node(query_tokens);
         new_node -> right = Create_Node(query_tokens);
+        if(new_node -> left == NULL || new_node -> right == NULL){
+            if(new_node -> left){
+                free(new_node -> left);
+            }
+            if(new_node -> right){
+                free(new_node -> right);
+            }
+            free(new_node -> word);
+            free(new_node);
+            return NULL;
+        }
     
-    }else if (strcmp(token, "!") == 0) {
+    }else if (strcmp(token, "&!") == 0) {
         new_node -> type = 2;
+        new_node -> word = strdup(token);
+        //Blir bare venstre OG ikke høyre
         new_node -> left = Create_Node(query_tokens);
         new_node -> right = Create_Node(query_tokens);
+        if(new_node -> left == NULL || new_node -> right == NULL){
+            if(new_node -> left){
+                free(new_node -> left);
+            }
+            if(new_node -> right){
+                free(new_node -> right);
+            }
+            free(new_node -> word);
+            free(new_node);
+            return NULL;
+        }
+
+        
+
+    }else{
+        //Vanlig term
+        new_node -> type = 99; 
+        new_node -> word = strdup(token);
     }
 
     
-    
-   
-
 
     return new_node;
 }
 
 
-list_t* index_query(index_t* index, list_t* query_tokens, char* errmsg) {
-    print_list_of_strings("query", query_tokens); // For debugging
+static void free_tree(node_t *root){
+    if(root == NULL){
+        return;
+    }
+
+    //Bruker rekursjon for å frigjøre barna 
+    free_tree(root -> left);
+    free_tree(root -> right);
+
+    //Frigjøre streng
+    if(root -> word){
+        free(root -> word);
+    }
+
+    free(root);
+}
+
+
+static set_t *eval_tree(node_t *root, index_t *index, char* errmsg){
+
+
     
- 
+
+
+    if(root -> type == 0){
+        set_t *left_child = eval_tree(root -> left, index , errmsg);
+        set_t *right_child = eval_tree(root -> right, index , errmsg);
+
+        if(left_child == NULL || right_child == NULL){
+            if(left_child){
+                set_destroy(left_child, free);
+            }
+            if(right_child){
+                set_destroy(right_child, free);
+            }
+            return NULL;
+        }
+
+        set_t *result_inter = set_intersection(left_child, right_child);
+        set_destroy(left_child, free);
+        set_destroy(right_child, free);
+
+        return result_inter;
+    }
+
+    if(root -> type == 1){
+        set_t *left_child = eval_tree(root -> left, index, errmsg);
+        set_t *right_child = eval_tree(root -> right, index, errmsg);
+
+        //Tilfelelr der operatorer er NULL
+        if(left_child == NULL || right_child == NULL){
+            if(left_child){
+                set_destroy(left_child, free);
+            }
+            if(right_child){
+                set_destroy(right_child, free);
+            }
+            return NULL;
+        }
+
+        set_t *result_union = set_union(left_child, right_child);
+        set_destroy(left_child, free);
+        set_destroy(right_child, free);
+
+        return result_union;
+    }
+
+    //
+    if(root -> type == 2){
+        set_t *left_child = eval_tree(root -> left, index, errmsg);
+        set_t *right_child = eval_tree(root -> right, index, errmsg);
+
+        if(left_child == NULL || right_child == NULL){
+            if(left_child){
+                set_destroy(left_child, free);
+            }
+            if(right_child){
+                set_destroy(right_child, free);
+            }
+            return NULL;
+        }
+
+        set_t *result_diff = set_difference(left_child, right_child);
+        set_destroy(left_child, free);
+        set_destroy(right_child, free);
+
+        return result_diff;
+
+        
+    }
+
+    
+    if(root -> type == 99){
+
+        
+        entry_t *term = map_get(index -> map, root -> word);
+        if(term == NULL){
+            snprintf(errmsg, LINE_MAX, "Term not found: %s", root -> word);
+            return NULL;
+        }
+       
+        list_t *doc_list = term -> val;
+        set_t *doc_set = set_create((cmp_fn)strcmp);
+        list_iter_t *iter = list_createiter(doc_list);
+        
+        while(list_hasnext(iter)){
+            //det som kommer fra next lagres med doc
+            char *doc = list_next(iter);
+            set_insert(doc_set, strdup(doc));
+        }
+        
+        return doc_set;
+    }
+
+    return NULL;
+    
+}
+
+
+
+
+list_t* index_query(index_t* index, list_t* query_tokens, char* errmsg) {
+    //print_list_of_strings("query", query_tokens); // For debugging
     
     return NULL;
 }
+
+
+
+
 
 void index_stat(index_t *index, size_t *n_docs, size_t *n_terms) {
     /**
